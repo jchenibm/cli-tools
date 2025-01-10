@@ -2,8 +2,7 @@
 
 # 函数：显示用法
 usage() {
-    echo "错误: $1"
-    echo "用法: $0 [-m model-name] [-l] <file-to-chat-with> | clipboard | <url>"
+    echo "Usage: $0 [-m model-name] <file-to-chat-with> | clipboard | <url>"
     exit 1
 }
 
@@ -59,7 +58,7 @@ handle_file() {
         txt)
             # Text file, copy content to markdown file
             cp "$FILE" "$MD_FILE"
-            ;;
+            ;;    
         ppt|pptx|PPT|PPTX)
             # echo "Converting to MD: $MD_FILE"
             if [ ! -f "$MD_FILE" ]; then
@@ -87,11 +86,7 @@ handle_file() {
 generate_summary() {
     local FILE_CONTENT="$1"
     echo "内容摘要："
-    if [ -n "$MODEL_NAME" ]; then
-        llm -m $MODEL_NAME -s "生成3点内容摘要，" "内容：$FILE_CONTENT"
-    else 
-        llm -s "生成3点内容摘要，" "内容：$FILE_CONTENT"
-    fi
+    llm -s "生成3点内容摘要，" "内容：$FILE_CONTENT"
     echo "-----------------------------"
 }
 
@@ -112,9 +107,9 @@ start_chat() {
 
 # Start of the main program
 
-# 检查参数是否为空
-if [ $# -eq 0 ]; then
-    usage "未提供任何参数"
+if [ "$1" != "clipboard" ] && [ ! -f "$1" ]; then
+    usage
+    exit 1
 fi
 
 # 依赖检查
@@ -130,6 +125,11 @@ while getopts "m:l" opt; do
     esac
 done
 shift $((OPTIND -1))
+
+# 检查是否提供了输入参数
+if [ "$#" -ne 1 ]; then
+    usage
+fi
 
 INPUT="$1"
 MD_FILE=""
