@@ -1,8 +1,29 @@
 #!/bin/bash
 
+# 初始化默认模型
+MODEL=""
+
+# 添加参数解析
+while getopts "m:" opt; do
+    case ${opt} in
+        m )
+            MODEL="-m $OPTARG"
+            ;;
+        \? )
+            echo "Invalid option: -$OPTARG" 1>&2
+            exit 1
+            ;;
+        : )
+            echo "Option -$OPTARG requires an argument." 1>&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
 # 检查是否提供了参数
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <file-name> \"<question>\""
+    echo "Usage: $0 [-m model] <file-name> \"<question>\""
     exit 1
 fi
 
@@ -44,7 +65,7 @@ case "$EXT" in
         
         # 使用 LLM 命令进行问答，输出到临时文件
         echo "Asking question to LLM..."
-        cat "$MD_FILE" | llm -s "Question: $QUESTION" > "$TEMP_ANSWER_FILE"
+        cat "$MD_FILE" | llm $MODEL -s "Question: $QUESTION" > "$TEMP_ANSWER_FILE"
         ;;
         
     pdf)
@@ -67,7 +88,7 @@ case "$EXT" in
         
         # 使用 LLM 命令进行问答，输出到临时文件
         echo "Asking question to LLM..."
-        cat "$TXT_FILE" | llm -s "请用中文回答问题: $QUESTION" > "$TEMP_ANSWER_FILE"
+        cat "$TXT_FILE" | llm $MODEL -s "请用中文回答问题: $QUESTION" > "$TEMP_ANSWER_FILE"
         ;;
         
     *)
@@ -76,7 +97,7 @@ case "$EXT" in
         
         # 使用 LLM 命令进行问答，输出到临时文件
         echo "Asking question to LLM..."
-        cat "$FILE" | llm -s "Question: $QUESTION" > "$TEMP_ANSWER_FILE"
+        cat "$FILE" | llm $MODEL -s "Question: $QUESTION" > "$TEMP_ANSWER_FILE"
         ;;
 esac
 
